@@ -2,8 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.services.voice_service import transcribe_audio_with_hf
-from app.services.retrieval_service import retrieve_hadiths_for_question
-from app.services.llm_service import llm_answer
+from app.services.query_router import route_question
 
 router = APIRouter()
 
@@ -11,12 +10,13 @@ router = APIRouter()
 def serialize_hadiths(hadiths, limit=5):
     return [
         {
-            "text": h.get("text", ""),
-            "narrator": h.get("narrator", ""),
-            "scholar": h.get("scholar", ""),
-            "source": h.get("source", ""),
-            "page": h.get("page", ""),
-            "grade": h.get("grade", ""),
+            "text": h.get("text", h.get("نص_الحديث", "")),
+            "narrator": h.get("narrator", h.get("الراوي", "")),
+            "scholar": h.get("scholar", h.get("المحدث", "")),
+            "source": h.get("source", h.get("المصدر", "")),
+            "page": h.get("page", h.get("الصفحة", "")),
+            "grade": h.get("grade", h.get("الدرجة", "")),
+            "match_score": h.get("match_score", None),
         }
         for h in hadiths[:limit]
     ]
@@ -33,11 +33,12 @@ async def ask_voice(audio: UploadFile = File(...)):
         content_type=audio.content_type or "audio/wav"
     )
 
-    hadiths = retrieve_hadiths_for_question(transcript)
-    answer = llm_answer(transcript, hadiths)
+    result = route_question(transcript)
 
     return JSONResponse({
         "transcript": transcript,
-        "answer": answer,
-        "hadiths": serialize_hadiths(hadiths),
+        "mode": result["mode"],
+        "search_queries": result["search_queries"],
+        "answer": result["answer"],
+        "hadiths": serialize_hadiths(result["hadiths"]),
     })

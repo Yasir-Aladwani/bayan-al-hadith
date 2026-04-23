@@ -19,35 +19,60 @@ def normalize_arabic(text: str) -> str:
     return text.strip().lower()
 
 
-def keyword_from_question(question: str):
+def detect_mode(question: str) -> str:
     q = question.strip()
-    keywords = []
 
-    if any(x in q for x in ["أول وقت", "اول وقت", "لوقتها", "في وقتها", "مواقيتها"]):
-        keywords.extend(["الصلاة لوقتها", "الصلاة في وقتها", "مواقيت الصلاة"])
+    sharh_words = ["اشرح", "شرح", "فسر", "فسري", "وضح", "وضحي", "معنى الحديث"]
+    hadith_words = ["اعطني حديث", "أعطني حديث", "هات حديث", "حديث عن", "ما الحديث"]
+
+    if any(word in q for word in sharh_words):
+        return "sharh"
+
+    if any(word in q for word in hadith_words):
+        return "direct_hadith"
+
+    return "general"
+
+
+def build_search_queries(question: str) -> list[str]:
+    q = question.strip()
+    queries = []
+
+    if any(x in q for x in ["أول وقت", "اول وقت", "في وقتها", "لوقتها", "مواقيتها"]):
+        queries.extend([
+            "الصلاة لوقتها",
+            "الصلاة في وقتها",
+            "مواقيت الصلاة",
+            "فضل الصلاة لوقتها",
+        ])
 
     if any(x in q for x in ["الصلاة", "صلاة"]):
-        keywords.append("الصلاة")
-    if any(x in q for x in ["الوضوء", "وضوء"]):
-        keywords.append("الوضوء")
-    if any(x in q for x in ["الزكاة", "زكاة"]):
-        keywords.append("الزكاة")
-    if any(x in q for x in ["الصيام", "صيام"]):
-        keywords.append("الصيام")
-    if any(x in q for x in ["الحج", "حج"]):
-        keywords.append("الحج")
-    if any(x in q for x in ["أذكار", "اذكار", "ذكر"]):
-        keywords.append("الأذكار")
+        queries.append("الصلاة")
 
-    if not keywords:
-        keywords.append(q)
+    if any(x in q for x in ["الوضوء", "وضوء"]):
+        queries.extend(["الوضوء", "صفة الوضوء"])
+
+    if any(x in q for x in ["الزكاة", "زكاة"]):
+        queries.append("الزكاة")
+
+    if any(x in q for x in ["الصيام", "صيام"]):
+        queries.append("الصيام")
+
+    if any(x in q for x in ["الحج", "حج"]):
+        queries.append("الحج")
+
+    if any(x in q for x in ["اذكار", "أذكار", "ذكر"]):
+        queries.extend(["الأذكار", "أذكار النوم", "أذكار الصباح"])
+
+    if not queries:
+        queries.append(q)
 
     unique = []
     seen = set()
-    for k in keywords:
-        if k not in seen:
-            seen.add(k)
-            unique.append(k)
+    for item in queries:
+        if item not in seen:
+            seen.add(item)
+            unique.append(item)
 
     return unique
 
@@ -81,7 +106,16 @@ def filter_by_degree(results):
 def relevance_score(query: str, hadith_text: str) -> int:
     q_words = normalize_arabic(query).split()
     text = normalize_arabic(hadith_text)
-    return sum(1 for w in q_words if w in text)
+    score = 0
+
+    for w in q_words:
+        if w in text:
+            score += 2
+
+    if normalize_arabic(query) in text:
+        score += 5
+
+    return score
 
 
 def grade_score(grade: str) -> int:
@@ -96,24 +130,24 @@ def grade_score(grade: str) -> int:
     return 1
 
 
-def rank_results(results, query: str):
+def rank_results(results, question: str):
     return sorted(
         results,
         key=lambda x: (
-            relevance_score(query, x.get("text", "")),
+            relevance_score(question, x.get("text", "")),
             grade_score(x.get("grade", "")),
-            len(x.get("text", "")),
+            -len(x.get("text", ""))
         ),
         reverse=True
     )
 
 
 def retrieve_hadiths_for_question(question: str):
-    keywords = keyword_from_question(question)
+    queries = build_search_queries(question)
 
     all_results = []
-    for kw in keywords:
-        all_results.extend(fetch_from_dorar(kw))
+    for query in queries:
+        all_results.extend(fetch_from_dorar(query))
 
     all_results = deduplicate_results(all_results)
     all_results = filter_by_degree(all_results)
