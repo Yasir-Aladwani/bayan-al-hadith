@@ -6,8 +6,9 @@ from app.services.query_router import route_question
 router = APIRouter()
 
 
-def serialize_hadiths(hadiths, limit=5):
+def serialize_hadiths(hadiths, limit=3):
     output = []
+
     for h in hadiths[:limit]:
         output.append({
             "text": h.get("text", h.get("نص_الحديث", "")),
@@ -18,16 +19,18 @@ def serialize_hadiths(hadiths, limit=5):
             "grade": h.get("grade", h.get("الدرجة", "")),
             "match_score": h.get("match_score", None),
         })
+
     return output
 
 
 @router.post("/ask")
 def ask(payload: AskRequest):
     question = payload.question.strip()
+
     if not question:
         return JSONResponse(
             status_code=400,
-            content={"detail": "Question is required"}
+            content={"detail": "Question is required"},
         )
 
     result = route_question(question)

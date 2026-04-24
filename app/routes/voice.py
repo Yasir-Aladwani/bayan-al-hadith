@@ -8,8 +8,10 @@ router = APIRouter()
 
 
 def serialize_hadiths(hadiths, limit=5):
-    return [
-        {
+    output = []
+
+    for h in hadiths[:limit]:
+        output.append({
             "text": h.get("text", h.get("نص_الحديث", "")),
             "narrator": h.get("narrator", h.get("الراوي", "")),
             "scholar": h.get("scholar", h.get("المحدث", "")),
@@ -17,20 +19,21 @@ def serialize_hadiths(hadiths, limit=5):
             "page": h.get("page", h.get("الصفحة", "")),
             "grade": h.get("grade", h.get("الدرجة", "")),
             "match_score": h.get("match_score", None),
-        }
-        for h in hadiths[:limit]
-    ]
+        })
+
+    return output
 
 
 @router.post("/ask-voice")
 async def ask_voice(audio: UploadFile = File(...)):
     file_bytes = await audio.read()
+
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Empty audio file")
 
     transcript = transcribe_audio_with_hf(
         file_bytes=file_bytes,
-        content_type=audio.content_type or "audio/wav"
+        content_type=audio.content_type or "audio/wav",
     )
 
     result = route_question(transcript)
@@ -40,5 +43,6 @@ async def ask_voice(audio: UploadFile = File(...)):
         "mode": result["mode"],
         "search_queries": result["search_queries"],
         "answer": result["answer"],
+        "support": result.get("support"),
         "hadiths": serialize_hadiths(result["hadiths"]),
     })

@@ -6,6 +6,7 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 def build_context(hadiths):
     chunks = []
+
     for i, h in enumerate(hadiths, start=1):
         chunks.append(
             f"""حديث {i}:
@@ -17,6 +18,7 @@ def build_context(hadiths):
 الدرجة: {h.get("grade", "")}
 """
         )
+
     return "\n".join(chunks)
 
 
@@ -30,7 +32,7 @@ def template_answer(question: str, hadiths):
         "الجواب المختصر:",
         "تم العثور على أحاديث مرتبطة بالسؤال.",
         "",
-        "الدليل:"
+        "الدليل:",
     ]
 
     for i, h in enumerate(hadiths[:3], start=1):
@@ -44,37 +46,6 @@ def template_answer(question: str, hadiths):
         lines.append("")
 
     return "\n".join(lines)
-
-
-def verify_template_answer(user_input: str, hadith: dict):
-    if not hadith:
-        return "لم أتمكن من التحقق من الحديث."
-
-    grade = hadith.get("grade", "")
-    text = hadith.get("text", "")
-    narrator = hadith.get("narrator", "")
-    scholar = hadith.get("scholar", "")
-    source = hadith.get("source", "")
-    page = hadith.get("page", "")
-    match_score = hadith.get("match_score", None)
-
-    opening = f"هذا الحديث {grade}." if grade else "تم العثور على أقرب حديث مطابق."
-
-    note = ""
-    if match_score is not None and match_score < 0.70:
-        note = "\nملاحظة: تم عرض أقرب حديث مطابق، وقد تكون الصيغة المدخلة مختلفة عن النص الأصلي."
-
-    return (
-        f"{opening}\n\n"
-        f"التفاصيل:\n"
-        f"نص الحديث: {text}\n"
-        f"الراوي: {narrator}\n"
-        f"المحدث: {scholar}\n"
-        f"المصدر: {source}\n"
-        f"الصفحة: {page}\n"
-        f"الدرجة: {grade}"
-        f"{note}"
-    )
 
 
 def llm_answer(question: str, hadiths):
@@ -96,15 +67,15 @@ def llm_answer(question: str, hadiths):
 {context}
 
 التعليمات:
-
-1) ابدأ بجواب مختصر وواضح (سطرين كحد أقصى) مبني فقط على الأحاديث  
-2) ثم اكتب: "الدليل:"  
-3) اعرض الأحاديث من الأقرب إلى الأقل صلة  
-4) لا تكرر نفس الحديث  
-5) لا تضف أي معلومة من خارج الأحاديث  
-6) إذا وُجد أكثر من حديث، اختم بجملة قصيرة توضح العلاقة بينها  
-7) إذا لم تجد جواباً مباشراً، قل ذلك بوضوح  
-8) استخدم لغة عربية فصيحة واضحة ومباشرة  
+1) ابدأ بجواب مختصر وواضح من سطرين كحد أقصى.
+2) أجب فقط من الأحاديث المعطاة.
+3) لا تضف أي معلومة من خارج الأحاديث.
+4) ثم اكتب: الدليل
+5) اعرض الأحاديث من الأقرب إلى الأقل صلة.
+6) لا تكرر نفس الحديث.
+7) إذا لم تجد جوابًا مباشرًا، قل ذلك بوضوح.
+8) استخدم لغة عربية بسيطة وواضحة.
+9) لا تستخدم markdown مثل ** أو *.
 
 الإجابة:
 """
@@ -113,7 +84,49 @@ def llm_answer(question: str, hadiths):
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.1,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return template_answer(question, hadiths)
+
+
+def fiqh_answer(question: str, hadiths):
+    if not hadiths:
+        return "لم أجد في النتائج المسترجعة أحاديث مناسبة لهذا السؤال."
+
+    if not openai_client:
+        return template_answer(question, hadiths)
+
+    context = build_context(hadiths[:5])
+
+    prompt = f"""
+أنت مساعد متخصص في الإجابة على الأسئلة الفقهية اعتمادًا على الأحاديث المعطاة فقط.
+
+السؤال الفقهي:
+{question}
+
+الأحاديث:
+{context}
+
+التعليمات:
+1) ابدأ بعبارة واضحة مثل: الحكم الظاهر من الأحاديث المعطاة هو...
+2) لا تصدر فتوى مطلقة من خارج الأحاديث.
+3) لا تضف أي معلومة غير موجودة في الأحاديث.
+4) إذا لم تكن الأحاديث كافية للحكم، قل: لا تكفي الأحاديث المسترجعة لإعطاء حكم مباشر.
+5) بعد الجواب اكتب: الدليل
+6) اعرض الأحاديث التي بنيت عليها الإجابة.
+7) استخدم لغة عربية واضحة.
+8) لا تستخدم markdown مثل ** أو *.
+
+الإجابة:
+"""
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.1,
+            messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content.strip()
     except Exception:
@@ -167,33 +180,29 @@ def verify_hadith_answer(user_input: str, hadith: dict):
 نسبة المطابقة: {match_score}
 
 التعليمات:
-- اكتب الإجابة بلغة عربية واضحة ومباشرة.
 - لا تستخدم markdown.
 - لا تبدأ بشرطات أو نجوم.
 - لا تضف أي معلومة من خارج البيانات المعطاة.
-- ابدأ بجملة قصيرة جدًا مثل:
-  هذا الحديث صحيح.
-  أو
-  هذا الحديث حسن.
-  أو
-  هذا الحديث ضعيف.
-- بعد ذلك اكتب كلمة: التفاصيل
-- ثم اعرض الحقول كسطور عادية بهذا الشكل:
-  نص الحديث: ...
-  الراوي: ...
-  المحدث: ...
-  المصدر: ...
-  الصفحة: ...
-  الدرجة: ...
-- إذا كانت نسبة المطابقة منخفضة، أضف في النهاية:
-  ملاحظة: تم عرض أقرب حديث مطابق، وقد تكون الصيغة المدخلة مختلفة عن النص الأصلي.
+- ابدأ بجملة قصيرة مثل: هذا الحديث صحيح.
+- اعتمد على خانة الدرجة فقط.
+- بعد ذلك اكتب: التفاصيل
+- ثم اعرض:
+نص الحديث:
+الراوي:
+المحدث:
+المصدر:
+الصفحة:
+الدرجة:
+- إذا كانت نسبة المطابقة أقل من 0.70، أضف ملاحظة أن الصيغة المدخلة قد تختلف عن النص الأصلي.
+
+الإجابة:
 """
 
     try:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.1,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content.strip()
     except Exception:
@@ -208,7 +217,8 @@ def verify_hadith_answer(user_input: str, hadith: dict):
             f"الدرجة: {grade}"
             f"{note}"
         )
-    
+
+
 def support_answer(user_input: str, support: dict, hadiths):
     dua = support.get("dua", "")
     verse = support.get("verse", "")
@@ -222,8 +232,8 @@ def support_answer(user_input: str, support: dict, hadiths):
             "دعاء مناسب:",
             dua,
             "",
-            f"آية مناسبة:",
-            f"{verse}",
+            "آية مناسبة:",
+            verse,
             f"المرجع: {verse_ref}",
         ]
 
@@ -260,20 +270,20 @@ def support_answer(user_input: str, support: dict, hadiths):
 {context}
 
 التعليمات:
-- ابدأ بجملة قصيرة فيها تعاطف بدون مبالغة
-- أضف جملة بسيطة تشجع على الهدوء مثل: خذ الأمور خطوة خطوة
-- لا تستخدم أي markdown مثل ** أو *
-- لا تستخدم شرطات في البداية
-- اكتب النص بشكل طبيعي فقط
+- ابدأ بجملة قصيرة فيها تعاطف بدون مبالغة.
+- أضف جملة بسيطة تشجع على الهدوء مثل: خذ الأمور خطوة خطوة.
+- لا تستخدم أي markdown مثل ** أو *.
+- لا تستخدم شرطات في البداية.
+- اكتب النص بشكل طبيعي فقط.
 - بعد ذلك اكتب: دعاء مناسب
-- ثم اكتب الدعاء
+- ثم اكتب الدعاء.
 - ثم اكتب: آية مناسبة
-- ثم اكتب الآية مع المرجع
+- ثم اكتب الآية مع المرجع.
 - ثم اكتب: حديث مناسب
-- ثم اعرض حديثًا واحدًا فقط إن وُجد
-- لا تضف أي نصائح طبية أو تشخيص
-- لا تدعو على أي شخص حتى لو طلب المستخدم
-- استخدم لغة عربية بسيطة وواضحة
+- ثم اعرض حديثًا واحدًا فقط إن وجد.
+- لا تضف أي نصائح طبية أو تشخيصية.
+- لا تدعو على أي شخص حتى لو طلب المستخدم.
+- استخدم لغة عربية بسيطة وواضحة.
 
 الإجابة:
 """
@@ -282,7 +292,7 @@ def support_answer(user_input: str, support: dict, hadiths):
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.2,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content.strip()
     except Exception:
