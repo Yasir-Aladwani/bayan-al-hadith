@@ -6,7 +6,7 @@ from app.services.query_router import route_question
 router = APIRouter()
 
 
-def serialize_hadiths(hadiths, limit=3):
+def serialize_hadiths(hadiths, limit=5):
     output = []
 
     for h in hadiths[:limit]:
@@ -41,5 +41,6 @@ def ask(payload: AskRequest):
         "search_queries": result["search_queries"],
         "answer": result["answer"],
         "support": result.get("support"),
+        "verses": result.get("verses", []),
         "hadiths": serialize_hadiths(result["hadiths"]),
     })

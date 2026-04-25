@@ -154,3 +154,49 @@ def retrieve_hadiths_for_question(question: str):
     all_results = rank_results(all_results, question)
 
     return all_results
+
+
+def retrieve_hadiths_by_queries(queries):
+    if not queries:
+        return []
+
+    all_results = []
+
+    for query in queries:
+        all_results.extend(fetch_from_dorar(query))
+
+    all_results = deduplicate_results(all_results)
+    all_results = filter_by_degree(all_results)
+
+    joined_query = " ".join(queries)
+    all_results = rank_results(all_results, joined_query)
+
+    return all_results
+
+def filter_wrong_meaning(hadiths, question):
+    filtered = []
+
+    q = question.replace("أ", "ا").replace("إ", "ا").replace("آ", "ا")
+
+    for h in hadiths:
+        text = h.get("text", "")
+
+        if "سحر" in q:
+            wrong_words = [
+                "السَّحَر",
+                "سحور",
+                "تسحروا",
+                "تسحَّروا",
+                "صيام",
+                "صائم",
+                "أكل",
+                "شرب",
+                "الفجر",
+            ]
+
+            if any(word in text for word in wrong_words):
+                continue
+
+        filtered.append(h)
+
+    return filtered

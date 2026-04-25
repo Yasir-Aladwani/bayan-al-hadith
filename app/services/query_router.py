@@ -1,193 +1,152 @@
-from app.services.retrieval_service import (
-    build_search_queries,
-    retrieve_hadiths_for_question,
-)
-from app.services.memory_service import (
-    search_closest_hadith,
-    search_best_verified_hadith,
-)
 from app.services.llm_service import (
-    llm_answer,
+    route_question_plan,
+    general_text_answer,
+    support_reflection_answer,
+    fiqh_quran_sunnah_answer,
+    tafsir_answer,
     verify_hadith_answer,
-    support_answer,
-    fiqh_answer,
 )
-from app.services.support_service import (
-    detect_support_mode,
-    detect_emotion,
-    get_spiritual_support,
+from app.services.retrieval_service import (
+    retrieve_hadiths_by_queries,
+    filter_wrong_meaning,
 )
-
-
-def detect_verify_mode(question: str) -> bool:
-    q = question.strip()
-
-    verify_signals = [
-        "هل هذا الحديث صحيح",
-        "هل الحديث صحيح",
-        "هل حديث",
-        "تحقق من الحديث",
-        "تحقق من هذا الحديث",
-        "ما درجة هذا الحديث",
-        "ما صحة هذا الحديث",
-        "حديث منتشر",
-        "سمعت حديث",
-        "هل هذا حديث",
-        "هل هذا الحديث ضعيف",
-        "هل هذا الحديث موضوع",
-        "صحيح ولا لا",
-        "صحيح أم لا",
-        "هل هو صحيح",
-    ]
-
-    return any(signal in q for signal in verify_signals)
-
-
-def detect_memory_mode(question: str) -> bool:
-    q = question.strip()
-
-    memory_signals = [
-        "اكمل الحديث",
-        "أكمل الحديث",
-        "وش الحديث",
-        "ما هو الحديث",
-        "حديث يقول",
-        "حديث فيه",
-        "ناسي الحديث",
-        "مو متذكر الحديث",
-        "اتذكر حديث",
-        "أتذكر حديث",
-    ]
-
-    return any(signal in q for signal in memory_signals)
-
-
-def detect_fiqh_mode(question: str) -> bool:
-    q = question.strip()
-
-    fiqh_signals = [
-        "ما حكم",
-        "حكم",
-        "هل يجوز",
-        "يجوز",
-        "لا يجوز",
-        "هل يصح",
-        "هل يجب",
-        "هل تبطل",
-        "يبطل",
-        "في الصلاة",
-        "في السجود",
-        "في الركوع",
-        "في الوضوء",
-        "في الصيام",
-        "في الحج",
-    ]
-
-    return any(signal in q for signal in fiqh_signals)
+from app.services.quran_service import retrieve_quran_by_queries
+from app.services.memory_service import search_closest_hadith, search_best_verified_hadith
+from app.services.support_service import choose_support_case
 
 
 def route_question(question: str):
     question = question.strip()
 
-    # 1) تحقق من صحة حديث
-    if detect_verify_mode(question):
-        try:
-            best_match = search_best_verified_hadith(question)
-            answer = verify_hadith_answer(question, best_match)
+    plan = route_question_plan(question)
 
-            return {
-                "mode": "verify_hadith",
-                "search_queries": [],
-                "answer": answer,
-                "hadiths": [best_match],
-                "support": None,
-            }
-        except Exception:
-            pass
+    mode = plan.get("mode", "general")
+    hadith_queries = plan.get("hadith_queries", []) or []
+    quran_queries = plan.get("quran_queries", []) or []
 
-    # 2) حديث من الذاكرة
-    if detect_memory_mode(question):
-        try:
-            best_match = search_closest_hadith(question)
-
-            return {
-                "mode": "memory",
-                "search_queries": [],
-                "answer": "تم العثور على أقرب حديث مطابق لما أدخله المستخدم.",
-                "hadiths": [best_match],
-                "support": None,
-            }
-        except Exception:
-            pass
-
-    # 3) سؤال فقهي / حكم
-    if detect_fiqh_mode(question):
-        search_queries = build_search_queries(question)
-        hadiths = retrieve_hadiths_for_question(question)
-
-        if not hadiths:
-            return {
-                "mode": "fiqh",
-                "search_queries": search_queries,
-                "answer": "لم يتم العثور على أحاديث مناسبة لهذا السؤال.",
-                "hadiths": [],
-                "support": None,
-            }
-
-        top_hadiths = hadiths[:3]
-        answer = fiqh_answer(question, top_hadiths)
+    if mode == "verify_hadith":
+        best_match = search_best_verified_hadith(question)
+        answer = verify_hadith_answer(question, best_match)
 
         return {
-            "mode": "fiqh",
-            "search_queries": search_queries,
+            "mode": "verify_hadith",
+            "search_queries": {
+                "hadith": hadith_queries,
+                "quran": [],
+            },
             "answer": answer,
-            "hadiths": top_hadiths,
             "support": None,
+            "verses": [],
+            "hadiths": [best_match],
         }
 
-    # 4) فضفضة / دعم روحاني
-    if detect_support_mode(question):
-        emotion = detect_emotion(question)
-        support = get_spiritual_support(emotion)
+    if mode == "memory":
+        best_match = search_closest_hadith(question)
 
-        hadiths = retrieve_hadiths_for_question(support["hadith_topic"])
-        top_hadiths = hadiths[:2]
+        if not best_match:
+            return {
+                "mode": "memory",
+                "search_queries": {
+                    "hadith": hadith_queries,
+                    "quran": [],
+                },
+                "answer": "لم يتم العثور على حديث مطابق بشكل موثوق.",
+                "support": None,
+                "verses": [],
+                "hadiths": [],
+            }
 
-        answer = support_answer(question, support, top_hadiths)
+        answer = (
+            "تم العثور على أقرب حديث مطابق:\n\n"
+            f"نص الحديث:\n{best_match.get('text', '')}\n\n"
+            f"الراوي: {best_match.get('narrator', '')}\n"
+            f"المحدث: {best_match.get('scholar', '')}\n"
+            f"المصدر: {best_match.get('source', '')}\n"
+            f"الصفحة: {best_match.get('page', '')}\n"
+            f"الدرجة: {best_match.get('grade', '')}"
+        )
+
+        return {
+            "mode": "memory",
+            "search_queries": {
+                "hadith": hadith_queries,
+                "quran": [],
+            },
+            "answer": answer,
+            "support": None,
+            "verses": [],
+            "hadiths": [best_match],
+        }
+
+    if mode == "support":
+        support_case = choose_support_case(question)
+
+        answer = support_reflection_answer(
+            user_input=question,
+            support_case=support_case,
+        )
 
         return {
             "mode": "support",
-            "search_queries": [support["hadith_topic"]],
-            "answer": answer,
-            "hadiths": top_hadiths,
-            "support": {
-                "emotion": support["emotion"],
-                "dua": support["dua"],
-                "verse": support["verse"],
-                "verse_ref": support["verse_ref"],
+            "search_queries": {
+                "support_case": support_case["emotion"],
+                "hadith": [],
+                "quran": [],
             },
+            "answer": answer,
+            "support": support_case,
+            "verses": [],
+            "hadiths":[],
         }
 
-    # 5) سؤال عام
-    search_queries = build_search_queries(question)
-    hadiths = retrieve_hadiths_for_question(question)
+    if mode == "tafsir":
+        verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
+        answer = tafsir_answer(question, verses[:5])
 
-    if not hadiths:
         return {
-            "mode": "general",
-            "search_queries": search_queries,
-            "answer": "لم يتم العثور على أحاديث مناسبة لهذا السؤال.",
-            "hadiths": [],
+            "mode": "tafsir",
+            "search_queries": {
+                "hadith": [],
+                "quran": used_quran_queries,
+            },
+            "answer": answer,
             "support": None,
+            "verses": verses[:5],
+            "hadiths": [],
         }
 
-    top_hadiths = hadiths[:5]
-    answer = llm_answer(question, top_hadiths)
+    if mode == "fiqh":
+        verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
+
+        hadiths = retrieve_hadiths_by_queries(hadith_queries)
+        hadiths = filter_wrong_meaning(hadiths, question)
+
+        answer = fiqh_quran_sunnah_answer(
+            question=question,
+            verses=verses[:5],
+            hadiths=hadiths[:5],
+        )
+
+        return {
+            "mode": "fiqh",
+            "search_queries": {
+                "hadith": hadith_queries,
+                "quran": used_quran_queries,
+            },
+            "answer": answer,
+            "support": None,
+            "verses": verses[:5],
+            "hadiths": hadiths[:5],
+        }
 
     return {
         "mode": "general",
-        "search_queries": search_queries,
-        "answer": answer,
-        "hadiths": top_hadiths,
+        "search_queries": {
+            "hadith": [],
+            "quran": [],
+        },
+        "answer": general_text_answer(question),
         "support": None,
+        "verses": [],
+        "hadiths": [],
     }

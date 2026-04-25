@@ -1,91 +1,57 @@
 import json
 from pathlib import Path
-
+from app.services.llm_service import openai_client
 
 DATA_PATH = Path("app/data/spiritual_support.json")
 
 
 def load_support_data():
-    with open(DATA_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    with open(DATA_PATH, "r", encoding="utf-8") as file:
+        return json.load(file)
 
 
-def detect_support_mode(question: str) -> bool:
-    q = question.strip()
+def choose_support_case(user_text: str):
+    cases = load_support_data()
 
-    support_signals = [
-        "زعلان",
-        "حزين",
-        "مهموم",
-        "مضايق",
-        "متضايق",
-        "تعبان",
-        "خايف",
-        "قلقان",
-        "قلق",
-        "ضايق",
-        "ضيقة",
-        "ضيق",
-        "مكتئب",
-        "أبي دعاء",
-        "ابغى دعاء",
-        "أحتاج دعاء",
-        "دعاء",
-        "فضفضة",
-        "طفشان",
-        "متوتر",
-        "توتر",
-        "مشكلة",
-        "مشكلتي",
-        "أحس",
-        "اشعر",
-        "أشعر",
-    ]
+    if not openai_client:
+        return cases[0]
 
-    return any(word in q for word in support_signals)
+    cases_text = ""
+    for i, item in enumerate(cases, start=1):
+        cases_text += f"""
+{i}) الحالة: {item["emotion"]}
+الكلمات الدالة: {", ".join(item.get("tags", []))}
+"""
 
+    prompt = f"""
+اقرأ كلام المستخدم وحدد أقرب حالة مناسبة من القائمة.
 
-def detect_emotion(text: str) -> str:
-    q = text.strip()
+كلام المستخدم:
+{user_text}
 
-    if any(w in q for w in ["حزين", "زعلان", "مكسور", "منهار"]):
-        return "حزن"
+القائمة:
+{cases_text}
 
-    if any(w in q for w in ["خايف", "خوف", "مرعوب"]):
-        return "خوف"
+القواعد:
+أعد رقم الحالة فقط.
+لا تشرح.
+لا تكتب أي شيء غير الرقم.
+اختر حسب المعنى، وليس تطابق الكلمات فقط.
+"""
 
-    if any(w in q for w in ["قلق", "قلقان", "متوتر", "توتر"]):
-        return "قلق"
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
 
-    if any(w in q for w in ["ضيق", "مضايق", "متضايق", "ضيقة"]):
-        return "ضيق"
+        index = int(response.choices[0].message.content.strip()) - 1
 
-    if any(w in q for w in ["ذنبي", "سويت ذنب", "معصية", "تبت", "استغفر"]):
-        return "ذنب"
+        if 0 <= index < len(cases):
+            return cases[index]
 
-    if any(w in q for w in ["فقد", "مات", "توفي", "خسرت"]):
-        return "فقد"
+    except Exception:
+        pass
 
-    if any(w in q for w in ["تعبان", "مرهق", "متعب", "تعب"]):
-        return "تعب"
-
-    if any(w in q for w in ["اختبار", "دراسة", "امتحان", "مذاكرة"]):
-        return "دراسة"
-
-    if any(w in q for w in ["فلوس", "رزق", "راتب", "ديون"]):
-        return "رزق"
-
-    if any(w in q for w in ["مريض", "مرض", "صداع", "وجع", "ألم"]):
-        return "مرض"
-
-    return "حزن"
-
-
-def get_spiritual_support(emotion: str):
-    data = load_support_data()
-
-    for item in data:
-        if item["emotion"] == emotion:
-            return item
-
-    return data[0]
+    return cases[0]

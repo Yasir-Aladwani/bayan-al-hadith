@@ -44,5 +44,6 @@ async def ask_voice(audio: UploadFile = File(...)):
         "search_queries": result["search_queries"],
         "answer": result["answer"],
         "support": result.get("support"),
+        "verses": result.get("verses", []),
         "hadiths": serialize_hadiths(result["hadiths"]),
     })
