@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "451447385833",
+    "project_id": "hudai-ddc43",
+    "storage_bucket": "hudai-ddc43.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451447385833:android:248418ef3792cca0790a78",
+        "android_client_info": {
+          "package_name": "com.example.hudai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf8lBvcm7XsGNiCETMNjRWkIo_xiyII7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
