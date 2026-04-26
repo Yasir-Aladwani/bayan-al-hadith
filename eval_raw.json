@@ -1,0 +1,104 @@
+[
+  {
+    "question": "ما حكم أكل الربا؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما الفرق بين السحر والشعوذة؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "هل ورد حديث في فضل السحور؟ وما هو؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "كم عدد ركعات صلاة العصر للمسافر؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما طريقة التيمم؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "أنا فرحان",
+    "mode": "support",
+    "error": "name 'run_support_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "إذا صليت العشاء وجئت المسجد والإمام يصلي التراويح، إيش أسوي؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "تخرجت من الجامعة بامتياز وأريد آية تعبر عن شكري لله",
+    "mode": "support",
+    "error": "name 'run_support_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "هل يجوز شرب الخمر خارج وقت الصلاة؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما معنى الإحسان؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "أشعر بضيق شديد وفقدان للأمل، ماذا يقول القرآن لي؟",
+    "mode": "support",
+    "error": "name 'run_support_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما المقصود بالتقوى؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "هل كل الجن شياطين؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "كيف نجمع بين التوكل والأخذ بالأسباب؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما فضل قول سبحان الله وبحمده؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما تفسير قوله تعالى إن مع العسر يسرا؟",
+    "mode": "tafsir",
+    "error": "name 'run_quran_pipeline' is not defined",
+    "status": "failed"
+  },
+  {
+    "question": "ما حكم الدعاء بآية في السجود؟",
+    "mode": "hadith",
+    "error": "name 'run_hadith_pipeline' is not defined",
+    "status": "failed"
+  }
+]
