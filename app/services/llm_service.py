@@ -107,6 +107,17 @@ dua_query يجب أن يشير للحالة الروحية المناسبة.
 إذا كان المستخدم غاضبًا أو معصبًا، اجعل dua_query عن الغضب.
 لا تجعل support فقط للمشاعر السلبية.
 
+قاعدة المفاهيم الدينية:
+إذا كان السؤال يطلب شرح مفهوم ديني، أو الفرق بين مفهومين دينيين، أو معنى مصطلح ديني، اجعل mode = fiqh.
+مثل: الفرق بين السحر والشعوذة، معنى الشرك، الفرق بين النفاق والكفر.
+في هذه الحالة استخرج quran_queries و hadith_queries مرتبطة بنفس الموضوع.
+
+قاعدة طلب الأحاديث:
+إذا كان المستخدم يسأل: هل ورد حديث في... أو اذكر حديث عن... أو ما الحديث في فضل...
+اجعل mode = memory.
+واستخرج hadith_queries بعبارة قصيرة مباشرة.
+لا تجعله verify_hadith إلا إذا كتب المستخدم نص حديث ويريد معرفة صحته.
+
 أمثلة:
 
 السؤال: حاسه بضيق فجأة
@@ -348,15 +359,33 @@ def fiqh_quran_sunnah_answer(question: str, verses, hadiths):
 {hadith_context}
 
 التعليمات:
+
+افهم نوع سؤال المستخدم أولًا.
+
+إذا كان السؤال يطلب حكمًا شرعيًا:
 ابدأ بعبارة: الحكم الظاهر من القرآن والسنة هو...
 لا تصدر فتوى مطلقة إذا كانت الأدلة غير كافية.
 إذا لم تكف النصوص المسترجعة قل ذلك بوضوح.
+
+إذا كان السؤال يطلب الفرق أو المقارنة بين مفهومين:
+لا تبدأ بالحكم.
+اشرح المفهوم الأول.
+ثم اشرح المفهوم الثاني.
+ثم اذكر الفرق بينهما بشكل واضح.
+لا تقل "لم أجد" إذا كان يمكن توضيح الفرق من المعنى العام.
+
+قواعد عامة:
 اعتمد فقط على الآيات وتفسير السعدي والأحاديث المعطاة.
 لا تضف معلومات من خارج النصوص.
+لا تخلط بين معاني مختلفة للكلمات.
+إذا كان الدليل لا يخدم نفس موضوع السؤال لا تستخدمه.
+
+قواعد عرض الأدلة:
 إذا وجدت آيات مناسبة اكتب: الدليل من القرآن.
 إذا لم توجد آيات مناسبة لا تذكر القرآن.
 إذا وجدت أحاديث مناسبة اكتب: الدليل من السنة.
 اذكر الراوي والمحدث والدرجة عند الاستدلال بالحديث.
+
 لا تستخدم markdown.
 
 الإجابة:
@@ -485,3 +514,99 @@ def support_reflection_answer(user_input: str, support_case: dict):
             f"دعاء مناسب:\n{dua_text}"
         )
     
+def rerank_hadiths_by_meaning(question: str, hadiths):
+    if not hadiths:
+        return []
+
+    if not openai_client:
+        return hadiths[:5]
+
+    hadith_list = ""
+
+    for i, h in enumerate(hadiths[:10], start=1):
+        hadith_list += f"""
+{i}
+النص: {h.get("text", "")}
+الراوي: {h.get("narrator", "")}
+المحدث: {h.get("scholar", "")}
+المصدر: {h.get("source", "")}
+الدرجة: {h.get("grade", "")}
+"""
+
+    prompt = f"""
+اقرأ سؤال المستخدم ثم اقرأ الأحاديث المرشحة.
+
+سؤال المستخدم:
+{question}
+
+الأحاديث المرشحة:
+{hadith_list}
+
+مهمتك:
+اختر الأحاديث التي تجيب عن معنى السؤال مباشرة، وليس لمجرد وجود كلمة مشتركة.
+
+قواعد صارمة:
+لا تختار حديثًا إذا كان يتكلم عن موضوع مختلف.
+لا تختار حديثًا إذا كان فيه كلمة مشابهة لكن المعنى مختلف.
+إذا كان السؤال عن حكم، اختر الحديث الذي يصلح دليلًا للحكم.
+إذا كان السؤال عن فضل، اختر الحديث الذي يذكر الفضل مباشرة.
+إذا كان السؤال عن إكمال حديث، اختر الحديث الأقرب للنص المطلوب.
+إذا لم يوجد حديث مناسب، أعد قائمة فارغة.
+
+أعد JSON فقط بهذا الشكل:
+{{"indexes":[1,2]}}
+"""
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        data = json.loads(response.choices[0].message.content.strip())
+        indexes = data.get("indexes", [])
+
+        selected = []
+        for idx in indexes:
+            if isinstance(idx, int) and 1 <= idx <= len(hadiths[:10]):
+                selected.append(hadiths[idx - 1])
+
+        return selected
+
+    except Exception:
+        return hadiths[:5]
+    
+def generate_hadith_search_queries(question: str):
+    if not openai_client:
+        return [question]
+
+    prompt = f"""
+حوّل سؤال المستخدم إلى عبارات بحث قوية للعثور على أحاديث مناسبة.
+
+السؤال:
+{question}
+
+القواعد:
+أعد JSON فقط.
+اكتب 3 إلى 5 عبارات بحث قصيرة.
+لا تعتمد على ألفاظ السؤال فقط.
+استخرج المعنى الشرعي المقصود.
+لا تكتب شرح.
+
+الشكل:
+{{"queries": []}}
+"""
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        data = json.loads(response.choices[0].message.content.strip())
+        return data.get("queries", []) or [question]
+
+    except Exception:
+        return [question]
