@@ -1,12 +1,14 @@
 class HadithSource {
   final String text;
   final String narrator;
+  final String scholar;
   final String source;
   final String grade;
 
   const HadithSource({
     required this.text,
     required this.narrator,
+    this.scholar = '',
     required this.source,
     required this.grade,
   });
@@ -15,6 +17,7 @@ class HadithSource {
     return HadithSource(
       text: json['text'] ?? '',
       narrator: json['narrator'] ?? '',
+      scholar: json['scholar'] ?? '',
       source: json['source'] ?? '',
       grade: json['grade'] ?? '',
     );
@@ -23,6 +26,7 @@ class HadithSource {
   Map<String, dynamic> toMap() => {
     'text': text,
     'narrator': narrator,
+    'scholar': scholar,
     'source': source,
     'grade': grade,
   };
@@ -38,15 +42,16 @@ class AnswerResponse {
   const AnswerResponse({
     required this.answer,
     required this.sources,
-    required this.keywordUsed,
-    required this.totalRetrieved,
-    required this.totalAfterFilter,
+    this.keywordUsed = '',
+    this.totalRetrieved = 0,
+    this.totalAfterFilter = 0,
   });
 
   factory AnswerResponse.fromJson(Map<String, dynamic> json) {
     return AnswerResponse(
       answer: json['answer'] ?? '',
-      sources: (json['sources'] as List? ?? [])
+      // backend sends 'hadiths'; fall back to 'sources' for Firestore-persisted messages
+      sources: (json['hadiths'] as List? ?? json['sources'] as List? ?? [])
           .map((s) => HadithSource.fromJson(s as Map<String, dynamic>))
           .toList(),
       keywordUsed: json['keyword_used'] ?? '',

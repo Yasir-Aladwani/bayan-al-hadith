@@ -3,8 +3,10 @@ import 'package:http/http.dart' as http;
 import '../models/answer_response.dart';
 
 class ApiService {
-  // Change this to your backend URL
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8000',
+  );
 
   static Future<AnswerResponse> ask(String question) async {
     final response = await http.post(
@@ -29,7 +31,7 @@ class ApiService {
   static Future<bool> healthCheck() async {
     try {
       final response = await http
-          .get(Uri.parse('$baseUrl/health'))
+          .get(Uri.parse('$baseUrl/'))
           .timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (_) {
