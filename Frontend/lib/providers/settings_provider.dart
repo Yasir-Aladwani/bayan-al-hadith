@@ -5,9 +5,9 @@ class SettingsProvider extends ChangeNotifier {
   int    _themeMode            = 1;
   double _fontScale            = 1.0;
   bool   _notificationsEnabled = true;
-  String _fontFamily           = 'Almarai';
+  String _fontFamily           = 'Amiri';
 
-  static String currentFont = 'Almarai';
+  static String currentFont = 'Amiri';
 
   bool   get isDark               => _themeMode != 0;
   bool   get isAmoled             => _themeMode == 2;
@@ -25,7 +25,7 @@ class SettingsProvider extends ChangeNotifier {
     _themeMode            = prefs.getInt('themeMode')            ?? 1;
     _fontScale            = prefs.getDouble('fontScale')          ?? 1.0;
     _notificationsEnabled = prefs.getBool('notifications')        ?? true;
-    _fontFamily           = prefs.getString('fontFamily')         ?? 'Almarai';
+    _fontFamily           = prefs.getString('fontFamily')         ?? 'Amiri';
     currentFont           = _fontFamily;
     notifyListeners();
   }

@@ -816,7 +816,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 textDirection: TextDirection.rtl,
                 style: appFont(color: _textMain, fontSize: 17),
                 decoration: InputDecoration(
-                  hintText: 'اكتب سؤالك عن السنة النبوية...',
+                  hintText: 'اكتب سؤالك...',
                   hintStyle:
                       appFont(color: _textMute, fontSize: 16),
                   border: InputBorder.none,

@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
                 // اسم التطبيق
                 Text(
-                  'مساعد الحديث النبوي',
+                  'المساعد الذكي',
                   style: appFont(
                     color: _gold.withValues(alpha: 0.8),
                     fontSize: 15,
