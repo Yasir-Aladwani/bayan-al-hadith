@@ -36,6 +36,7 @@ def send_otp(email: str, is_password_reset: bool = False) -> None:
     )
 
     if response.status_code != 200:
+        print(f"EmailJS error {response.status_code}: {response.text}", flush=True)
         raise Exception(f"EmailJS error {response.status_code}: {response.text}")
 
 
