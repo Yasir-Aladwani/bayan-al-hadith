@@ -4,7 +4,11 @@
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile",
     "buildArgs": {
-      "API_BASE_URL": "$API_BASE_URL"
+      "API_BASE_URL": "$API_BASE_URL",
+      "EMAILJS_SERVICE_ID": "$EMAILJS_SERVICE_ID",
+      "EMAILJS_TEMPLATE_ID": "$EMAILJS_TEMPLATE_ID",
+      "EMAILJS_TEMPLATE_ID_PASSWORD": "$EMAILJS_TEMPLATE_ID_PASSWORD",
+      "EMAILJS_PUBLIC_KEY": "$EMAILJS_PUBLIC_KEY"
     }
   },
   "deploy": {
