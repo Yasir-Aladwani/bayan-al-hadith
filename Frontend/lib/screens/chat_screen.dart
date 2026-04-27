@@ -557,15 +557,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 style: appFont(
                     color: _textMain, fontSize: 20, fontWeight: FontWeight.w600)),
           if (name.isNotEmpty) const SizedBox(height: 8),
-          Text('اسألني عن السنة النبوية',
+          Text('اسألني',
               style: appFont(
                   color: _accent,
                   fontSize: 26,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Text('سيتم الإجابة بناءً على الأحاديث الصحيحة فقط',
-              style: appFont(color: _textMute, fontSize: 17),
-              textAlign: TextAlign.center),
           const SizedBox(height: 32),
           _buildSuggestionChip('ما فضل الصلاة في أول وقتها؟'),
           const SizedBox(height: 8),
@@ -782,7 +778,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 4),
                 const _DotIndicator(delay: 400),
                 const SizedBox(width: 8),
-                Text('جارٍ البحث في الأحاديث...',
+                Text('جاري البحث...',
                     style:
                         appFont(color: _textMute, fontSize: 13)),
               ],
