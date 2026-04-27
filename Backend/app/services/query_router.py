@@ -26,10 +26,10 @@ def format_hadith_answer(hadith: dict):
     )
 
 
-def route_question(question: str, history: list = []):
+def route_question(question: str):
     question = question.strip()
 
-    plan = route_question_plan(question, history=history)
+    plan = route_question_plan(question)
 
     mode = plan.get("mode", "general")
     hadith_queries = plan.get("hadith_queries", []) or []
@@ -111,11 +111,11 @@ def route_question(question: str, history: list = []):
             "verses": [],
             "hadiths": [],
         }
-####
+
     # ================= TAFSIR =================
     if mode == "tafsir":
         verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
-        answer = tafsir_answer(question, verses[:5], history=history)
+        answer = tafsir_answer(question, verses[:5])
 
         return {
             "mode": "tafsir",
@@ -140,7 +140,6 @@ def route_question(question: str, history: list = []):
             question=question,
             verses=verses[:5],
             hadiths=hadiths[:3],
-            history=history,
         )
 
         return {
