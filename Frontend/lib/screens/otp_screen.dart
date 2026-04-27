@@ -50,7 +50,8 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
-    if (!OtpService.verify(code)) {
+    final valid = await OtpService.verify(widget.email, code);
+    if (!valid) {
       setState(() => _error = 'الرمز غير صحيح أو انتهت صلاحيته');
       return;
     }
