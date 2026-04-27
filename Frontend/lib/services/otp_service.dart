@@ -6,7 +6,7 @@ class OtpService {
   static const _serviceId          = 'service_jkytisf';
   static const _templateId         = 'template_k7xkcw1';
   static const _templateIdPassword = 'template_n4x7r8o';
-  static const _publicKey          = '-DSdH0pq5_Rkq5s0E';
+  static const _publicKey          = '_PCJUgH4omH5FwzUT';
 
   static String?   _pendingCode;
   static String?   _pendingEmail;
