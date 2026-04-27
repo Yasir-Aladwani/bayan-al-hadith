@@ -111,7 +111,7 @@ def route_question(question: str, history: list = []):
             "verses": [],
             "hadiths": [],
         }
-
+####
     # ================= TAFSIR =================
     if mode == "tafsir":
         verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
