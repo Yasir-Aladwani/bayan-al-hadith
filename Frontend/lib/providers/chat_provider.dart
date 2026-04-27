@@ -270,7 +270,16 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.ask(question);
+      final history = conv.messages
+          .where((m) => m.type == MessageType.user || m.type == MessageType.assistant)
+          .take(10)
+          .map((m) => {
+                'role': m.type == MessageType.user ? 'user' : 'assistant',
+                'content': m.text,
+              })
+          .toList();
+
+      final response = await ApiService.ask(question, history: history);
       conv.messages.add(ChatMessage(
         id: '${DateTime.now().millisecondsSinceEpoch}_ans',
         text: response.answer,

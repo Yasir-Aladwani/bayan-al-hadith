@@ -15,10 +15,10 @@ from app.services.memory_service import search_closest_hadith, search_best_verif
 from app.services.support_service import choose_support_case
 
 
-def route_question(question: str):
+def route_question(question: str, history: list = []):
     question = question.strip()
 
-    plan = route_question_plan(question)
+    plan = route_question_plan(question, history=history)
 
     mode = plan.get("mode", "general")
     hadith_queries = plan.get("hadith_queries", []) or []
@@ -101,7 +101,7 @@ def route_question(question: str):
 
     if mode == "tafsir":
         verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
-        answer = tafsir_answer(question, verses[:5])
+        answer = tafsir_answer(question, verses[:5], history=history)
 
         return {
             "mode": "tafsir",
@@ -125,6 +125,7 @@ def route_question(question: str):
             question=question,
             verses=verses[:5],
             hadiths=hadiths[:5],
+            history=history,
         )
 
         return {

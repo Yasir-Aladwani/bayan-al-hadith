@@ -8,14 +8,14 @@ class ApiService {
     defaultValue: 'http://localhost:8000',
   );
 
-  static Future<AnswerResponse> ask(String question) async {
+  static Future<AnswerResponse> ask(String question, {List<Map<String, String>> history = const []}) async {
     final response = await http.post(
       Uri.parse('$baseUrl/ask'),
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Accept': 'application/json',
       },
-      body: jsonEncode({'question': question}),
+      body: jsonEncode({'question': question, 'history': history}),
     );
 
     if (response.statusCode == 200) {

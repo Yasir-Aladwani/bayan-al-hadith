@@ -33,7 +33,7 @@ def ask(payload: AskRequest):
             content={"detail": "Question is required"},
         )
 
-    result = route_question(question)
+    result = route_question(question, history=payload.history or [])
 
     return JSONResponse({
         "question": question,

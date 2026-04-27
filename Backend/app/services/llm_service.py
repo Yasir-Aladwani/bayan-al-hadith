@@ -5,7 +5,17 @@ from app.config import OPENAI_API_KEY
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 
-def route_question_plan(question: str):
+def _build_history_messages(history: list):
+    messages = []
+    for msg in history[-10:]:
+        role = msg.role if hasattr(msg, "role") else msg.get("role", "user")
+        content = msg.content if hasattr(msg, "content") else msg.get("content", "")
+        if role in ("user", "assistant"):
+            messages.append({"role": role, "content": content})
+    return messages
+
+
+def route_question_plan(question: str, history: list = []):
     if not openai_client:
         return {
             "mode": "general",
@@ -215,10 +225,11 @@ dua_query يجب أن يشير للحالة الروحية المناسبة.
 """
 
     try:
+        messages = _build_history_messages(history) + [{"role": "user", "content": prompt}]
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
         )
         return json.loads(response.choices[0].message.content.strip())
 
@@ -274,7 +285,7 @@ def general_text_answer(question: str):
         "اكتب سؤالك ضمن هذه المجالات، وسأساعدك بإذن الله."
     )
 
-def tafsir_answer(question: str, verses):
+def tafsir_answer(question: str, verses, history: list = []):
     if not verses:
         return "لم يتم العثور على تفسير مناسب."
 
@@ -325,10 +336,11 @@ def tafsir_answer(question: str, verses):
 """
 
     try:
+        messages = _build_history_messages(history) + [{"role": "user", "content": prompt}]
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.2,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
         )
         return response.choices[0].message.content.strip()
 
@@ -336,7 +348,7 @@ def tafsir_answer(question: str, verses):
         return context
     
 
-def fiqh_quran_sunnah_answer(question: str, verses, hadiths):
+def fiqh_quran_sunnah_answer(question: str, verses, hadiths, history: list = []):
     if not verses and not hadiths:
         return "لم أجد في النتائج المسترجعة ما يكفي لإعطاء جواب مباشر من القرآن والسنة."
 
@@ -392,10 +404,11 @@ def fiqh_quran_sunnah_answer(question: str, verses, hadiths):
 """
 
     try:
+        messages = _build_history_messages(history) + [{"role": "user", "content": prompt}]
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.1,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
         )
         return response.choices[0].message.content.strip()
 
