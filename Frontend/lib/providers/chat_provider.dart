@@ -93,105 +93,6 @@ class ChatProvider extends ChangeNotifier {
     });
   }
 
-  static List<Conversation> _mockConversations() {
-    final now = DateTime.now();
-    return [
-      Conversation(
-        id: 'mock_1',
-        title: 'ما فضل الصلاة في أول وقتها؟',
-        createdAt: now.subtract(const Duration(hours: 1)),
-        messages: [
-          ChatMessage(id: 'm1_q', text: 'ما فضل الصلاة في أول وقتها؟', type: MessageType.user, timestamp: now.subtract(const Duration(hours: 1))),
-          ChatMessage(
-            id: 'm1_a', type: MessageType.assistant, timestamp: now.subtract(const Duration(hours: 1, seconds: -10)),
-            text: 'الصلاة في أول وقتها من أفضل الأعمال وأحبها إلى الله عز وجل، وقد دلّت على ذلك أحاديث نبوية صحيحة صريحة.',
-            response: const AnswerResponse(
-              answer: 'الصلاة في أول وقتها من أفضل الأعمال وأحبها إلى الله عز وجل.',
-              keywordUsed: 'فضل الصلاة أول وقت',
-              totalRetrieved: 5, totalAfterFilter: 3,
-              sources: [
-                HadithSource(
-                  text: 'سُئِلَ النبيُّ ﷺ: أيُّ الأعمالِ أحبُّ إلى اللهِ؟ قال: الصلاةُ على وقتِها.',
-                  narrator: 'عبدالله بن مسعود',
-                  source: 'صحيح البخاري',
-                  grade: 'صحيح',
-                ),
-                HadithSource(
-                  text: 'أفضلُ الأعمالِ الصلاةُ لأوَّلِ وقتِها.',
-                  narrator: 'أم فروة',
-                  source: 'سنن الترمذي',
-                  grade: 'صحيح',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      Conversation(
-        id: 'mock_2',
-        title: 'ما هي آداب النوم في الإسلام؟',
-        createdAt: now.subtract(const Duration(hours: 3)),
-        messages: [
-          ChatMessage(id: 'm2_q', text: 'ما هي آداب النوم في الإسلام؟', type: MessageType.user, timestamp: now.subtract(const Duration(hours: 3))),
-          ChatMessage(
-            id: 'm2_a', type: MessageType.assistant, timestamp: now.subtract(const Duration(hours: 3, seconds: -10)),
-            text: 'للنوم في الإسلام آداب وسنن نبوية ينبغي للمسلم مراعاتها، منها: النوم على الشِّق الأيمن، وقراءة الأذكار المأثورة.',
-            response: const AnswerResponse(
-              answer: 'للنوم في الإسلام آداب وسنن نبوية منها النوم على الشق الأيمن وقراءة الأذكار.',
-              keywordUsed: 'آداب النوم',
-              totalRetrieved: 6, totalAfterFilter: 4,
-              sources: [
-                HadithSource(
-                  text: 'إذا أتيتَ مضجعَك فتوضَّأ وضوءَك للصلاةِ، ثم اضطجِعْ على شِقِّك الأيمنِ.',
-                  narrator: 'البراء بن عازب',
-                  source: 'صحيح البخاري',
-                  grade: 'صحيح',
-                ),
-                HadithSource(
-                  text: 'باسمِكَ اللهمَّ أموتُ وأحيا.',
-                  narrator: 'حذيفة بن اليمان',
-                  source: 'صحيح البخاري',
-                  grade: 'صحيح',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      Conversation(
-        id: 'mock_3',
-        title: 'ما فضل الصدقة؟',
-        createdAt: now.subtract(const Duration(hours: 5)),
-        messages: [
-          ChatMessage(id: 'm3_q', text: 'ما فضل الصدقة؟', type: MessageType.user, timestamp: now.subtract(const Duration(hours: 5))),
-          ChatMessage(
-            id: 'm3_a', type: MessageType.assistant, timestamp: now.subtract(const Duration(hours: 5, seconds: -10)),
-            text: 'الصدقة من أفضل القربات إلى الله، وقد رغّب فيها النبي ﷺ ترغيباً عظيماً، وبيّن أن لها فضائل جليلة في الدنيا والآخرة.',
-            response: const AnswerResponse(
-              answer: 'الصدقة من أفضل القربات إلى الله ولها فضائل عظيمة في الدنيا والآخرة.',
-              keywordUsed: 'فضل الصدقة',
-              totalRetrieved: 7, totalAfterFilter: 5,
-              sources: [
-                HadithSource(
-                  text: 'الصدقةُ تُطفئُ الخطيئةَ كما يُطفئُ الماءُ النارَ.',
-                  narrator: 'معاذ بن جبل',
-                  source: 'سنن الترمذي',
-                  grade: 'صحيح',
-                ),
-                HadithSource(
-                  text: 'مَن تصدَّقَ بعَدْلِ تَمرةٍ مِن كسبٍ طيِّبٍ، ولا يَقبلُ اللهُ إلا الطيِّبَ، فإنَّ اللهَ يَقبلُها بيمينِه.',
-                  narrator: 'أبو هريرة',
-                  source: 'صحيح البخاري',
-                  grade: 'صحيح',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ];
-  }
-
   Future<void> _loadConversations() async {
     _isSyncing = true;
     _conversations.clear();
@@ -199,7 +100,6 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     if (_uid == null) {
-      _conversations.addAll(_mockConversations());
       _isSyncing = false;
       notifyListeners();
       return;
@@ -213,11 +113,8 @@ class ChatProvider extends ChangeNotifier {
       for (final doc in snap.docs) {
         _conversations.add(Conversation.fromFirestore(doc));
       }
+    } catch (_) {}
 
-      _conversations.addAll(_mockConversations());
-    } catch (_) {
-      if (_conversations.isEmpty) _conversations.addAll(_mockConversations());
-    }
 
     _isSyncing = false;
     notifyListeners();
