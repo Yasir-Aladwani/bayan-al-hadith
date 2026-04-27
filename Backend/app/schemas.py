@@ -1,15 +1,9 @@
 from pydantic import BaseModel
-from typing import List, Optional
-
-
-class HistoryMessage(BaseModel):
-    role: str
-    content: str
+from typing import List
 
 
 class AskRequest(BaseModel):
     question: str
-    history: Optional[List[HistoryMessage]] = []
 
 
 class MemoryRequest(BaseModel):
