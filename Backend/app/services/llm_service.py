@@ -5,17 +5,7 @@ from app.config import OPENAI_API_KEY
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 
-def _build_history_messages(history: list):
-    messages = []
-    for msg in history[-10:]:
-        role = msg.role if hasattr(msg, "role") else msg.get("role", "user")
-        content = msg.content if hasattr(msg, "content") else msg.get("content", "")
-        if role in ("user", "assistant"):
-            messages.append({"role": role, "content": content})
-    return messages
-
-
-def route_question_plan(question: str, history: list = []):
+def route_question_plan(question: str):
     if not openai_client:
         return {
             "mode": "general",
@@ -225,11 +215,10 @@ dua_query يجب أن يشير للحالة الروحية المناسبة.
 """
 
     try:
-        messages = _build_history_messages(history) + [{"role": "user", "content": prompt}]
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0,
-            messages=messages,
+            messages=[{"role": "user", "content": prompt}],
         )
         return json.loads(response.choices[0].message.content.strip())
 
@@ -285,7 +274,7 @@ def general_text_answer(question: str):
         "اكتب سؤالك ضمن هذه المجالات، وسأساعدك بإذن الله."
     )
 
-def tafsir_answer(question: str, verses, history: list = []):
+def tafsir_answer(question: str, verses):
     if not verses:
         return "لم يتم العثور على تفسير مناسب."
 
@@ -336,11 +325,10 @@ def tafsir_answer(question: str, verses, history: list = []):
 """
 
     try:
-        messages = _build_history_messages(history) + [{"role": "user", "content": prompt}]
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.2,
-            messages=messages,
+            messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content.strip()
 
@@ -348,7 +336,7 @@ def tafsir_answer(question: str, verses, history: list = []):
         return context
     
 
-def fiqh_quran_sunnah_answer(question: str, verses, hadiths, history: list = []):
+def fiqh_quran_sunnah_answer(question: str, verses, hadiths):
     if not verses and not hadiths:
         return "لم أجد في النتائج المسترجعة ما يكفي لإعطاء جواب مباشر من القرآن والسنة."
 
@@ -372,19 +360,11 @@ def fiqh_quran_sunnah_answer(question: str, verses, hadiths, history: list = [])
 
 التعليمات:
 
-افهم نوع سؤال المستخدم أولًا، ثم أجب على قدر السؤال مباشرة.
-
-لا تكتفِ بسرد الآيات أو الأحاديث.
-بعد ذكر الدليل، اشرح معناه بجملة بسيطة.
-في الخلاصة العملية:
-لا تستنتج حكمًا غير مذكور صراحة في النصوص.
+افهم نوع سؤال المستخدم أولًا.
 
 إذا كان السؤال يطلب حكمًا شرعيًا:
-ابدأ بـ:
-الحكم المختصر:
-ثم اكتب الحكم بوضوح من النصوص المسترجعة.
-إذا كان الدليل يدل على الاستحباب فقل مستحب.
-إذا كان الدليل يدل على النهي فقل منهي عنه أو لا يجوز بحسب النص.
+ابدأ بعبارة: الحكم الظاهر من القرآن والسنة هو...
+لا تصدر فتوى مطلقة إذا كانت الأدلة غير كافية.
 إذا لم تكف النصوص المسترجعة قل ذلك بوضوح.
 
 إذا كان السؤال يطلب الفرق أو المقارنة بين مفهومين:
@@ -392,47 +372,31 @@ def fiqh_quran_sunnah_answer(question: str, verses, hadiths, history: list = [])
 اشرح المفهوم الأول.
 ثم اشرح المفهوم الثاني.
 ثم اذكر الفرق بينهما بشكل واضح.
-لا تقل "لم أجد" إذا كان يمكن توضيح الفرق من النصوص المسترجعة.
-
-إذا كان النص يتكلم عن الدعاء:
-لا تفترض أن قراءة القرآن تعتبر دعاء.
-فرّق بين "الدعاء" و"قراءة القرآن".
-إذا لم يذكر النص جواز قراءة القرآن، لا تقل بجوازه.
+لا تقل "لم أجد" إذا كان يمكن توضيح الفرق من المعنى العام.
 
 قواعد عامة:
 اعتمد فقط على الآيات وتفسير السعدي والأحاديث المعطاة.
 لا تضف معلومات من خارج النصوص.
 لا تخلط بين معاني مختلفة للكلمات.
 إذا كان الدليل لا يخدم نفس موضوع السؤال لا تستخدمه.
+
+قواعد عرض الأدلة:
+إذا وجدت آيات مناسبة اكتب: الدليل من القرآن.
+إذا لم توجد آيات مناسبة لا تذكر القرآن.
+إذا وجدت أحاديث مناسبة اكتب: الدليل من السنة.
+اذكر الراوي والمحدث والدرجة عند الاستدلال بالحديث.
+
 لا تستخدم markdown.
-
-شكل الرد للأسئلة الحكمية:
-الحكم المختصر:
-...
-
-الدليل:
-...
-
-معنى الدليل:
-...
-
-الخلاصة العملية:
-...
 
 الإجابة:
 """
 
     try:
-        messages = _build_history_messages(history) + [
-            {"role": "user", "content": prompt}
-        ]
-
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0.1,
-            messages=messages,
+            messages=[{"role": "user", "content": prompt}],
         )
-
         return response.choices[0].message.content.strip()
 
     except Exception:
