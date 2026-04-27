@@ -14,6 +14,7 @@ _otp_store: dict = {}
 
 
 def send_otp(email: str, is_password_reset: bool = False) -> None:
+    print(f"DEBUG service='{EMAILJS_SERVICE_ID}' public='{EMAILJS_PUBLIC_KEY}' private='{EMAILJS_PRIVATE_KEY[:4] if EMAILJS_PRIVATE_KEY else ''}'", flush=True)
     code = str(random.randint(100000, 999999))
     expiry = datetime.now() + timedelta(minutes=10)
     _otp_store[email] = {"code": code, "expiry": expiry}
