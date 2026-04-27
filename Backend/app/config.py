@@ -17,5 +17,6 @@ HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
 EMAILJS_SERVICE_ID          = os.getenv("EMAILJS_SERVICE_ID", "").strip()
 EMAILJS_TEMPLATE_ID         = os.getenv("EMAILJS_TEMPLATE_ID", "").strip()
 EMAILJS_TEMPLATE_ID_PASSWORD= os.getenv("EMAILJS_TEMPLATE_ID_PASSWORD", "").strip()
-EMAILJS_PUBLIC_KEY          = os.getenv("EMAILJS_PUBLIC_KEY", "").strip()
+_raw_public_key             = os.getenv("EMAILJS_PUBLIC_KEY", "").strip()
+EMAILJS_PUBLIC_KEY          = f"-{_raw_public_key}" if _raw_public_key and not _raw_public_key.startswith("-") else _raw_public_key
 EMAILJS_PRIVATE_KEY         = os.getenv("EMAILJS_PRIVATE_KEY", "").strip()
