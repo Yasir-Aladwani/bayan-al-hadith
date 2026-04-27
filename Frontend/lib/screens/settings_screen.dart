@@ -134,7 +134,7 @@ void _showAboutDialog(BuildContext context) {
               Container(width: double.infinity, height: 1, color: _border(context)),
               const SizedBox(height: 20),
               Text(
-                'هداي هو مساعدك الذكي المتخصص في الحديث النبوي الشريف،\nيساعدك على البحث والفهم والاستفادة من السنة النبوية بطريقة سهلة وموثوقة.',
+                'هداي.. مساعدك الذكي الذي يجمع بين أصالة المصدر وذكاء التكنولوجيا. رفيقك الموثوق للبحث في الحديث وفهم القرآن، وملاذك الدافئ الذي يواسيك بآيات السكينة وأحاديث الطمأنينة، ليقدم لك الدعم الوجداني ويرشدك بكلماتٍ تمس قلبك وتجبر خاطرك برؤية معاصرة ومنهجية رصينة.',
                 textAlign: TextAlign.center,
                 style: appFont(color: _textMain(context), fontSize: 14, height: 1.7),
               ),
@@ -146,7 +146,7 @@ void _showAboutDialog(BuildContext context) {
                 children: [
                   Icon(Icons.favorite, color: _accent(context), size: 14),
                   const SizedBox(width: 6),
-                  Text('صُنع بشغف لخدمة السنة النبوية',
+                  Text('صُنع بشغف لخدمة المسلمين',
                       style: appFont(color: _textMute(context), fontSize: 12)),
                 ],
               ),
