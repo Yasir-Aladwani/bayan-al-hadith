@@ -15,6 +15,17 @@ from app.services.memory_service import search_closest_hadith, search_best_verif
 from app.services.support_service import choose_support_case
 
 
+def format_hadith_answer(hadith: dict):
+    return (
+        f"{hadith.get('text', '')}\n\n"
+        f"الراوي: {hadith.get('narrator', '')}\n"
+        f"المحدث: {hadith.get('scholar', '')}\n"
+        f"المصدر: {hadith.get('source', '')}\n"
+        f"الصفحة: {hadith.get('page', '')}\n"
+        f"الدرجة: {hadith.get('grade', '')}"
+    )
+
+
 def route_question(question: str, history: list = []):
     question = question.strip()
 
@@ -24,6 +35,7 @@ def route_question(question: str, history: list = []):
     hadith_queries = plan.get("hadith_queries", []) or []
     quran_queries = plan.get("quran_queries", []) or []
 
+    # ================= VERIFY HADITH =================
     if mode == "verify_hadith":
         best_match = search_best_verified_hadith(question)
         answer = verify_hadith_answer(question, best_match)
@@ -37,13 +49,20 @@ def route_question(question: str, history: list = []):
             "answer": answer,
             "support": None,
             "verses": [],
-            "hadiths": [best_match],
+            "hadiths": [best_match] if best_match else [],
         }
 
+    # ================= MEMORY / HADITH SEARCH =================
     if mode == "memory":
-        best_match = search_closest_hadith(question)
+        hadiths = retrieve_hadiths_by_queries(hadith_queries)
 
-        if not best_match:
+        if not hadiths:
+            best_match = search_closest_hadith(question)
+            hadiths = [best_match] if best_match else []
+
+        hadiths = filter_wrong_meaning(hadiths, question)
+
+        if not hadiths:
             return {
                 "mode": "memory",
                 "search_queries": {
@@ -56,15 +75,8 @@ def route_question(question: str, history: list = []):
                 "hadiths": [],
             }
 
-        answer = (
-            "تم العثور على أقرب حديث مطابق:\n\n"
-            f"نص الحديث:\n{best_match.get('text', '')}\n\n"
-            f"الراوي: {best_match.get('narrator', '')}\n"
-            f"المحدث: {best_match.get('scholar', '')}\n"
-            f"المصدر: {best_match.get('source', '')}\n"
-            f"الصفحة: {best_match.get('page', '')}\n"
-            f"الدرجة: {best_match.get('grade', '')}"
-        )
+        best_match = hadiths[0]
+        answer = format_hadith_answer(best_match)
 
         return {
             "mode": "memory",
@@ -75,9 +87,10 @@ def route_question(question: str, history: list = []):
             "answer": answer,
             "support": None,
             "verses": [],
-            "hadiths": [best_match],
+            "hadiths": hadiths[:5],
         }
 
+    # ================= SUPPORT =================
     if mode == "support":
         support_case = choose_support_case(question)
 
@@ -96,9 +109,10 @@ def route_question(question: str, history: list = []):
             "answer": answer,
             "support": support_case,
             "verses": [],
-            "hadiths":[],
+            "hadiths": [],
         }
 
+    # ================= TAFSIR =================
     if mode == "tafsir":
         verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
         answer = tafsir_answer(question, verses[:5], history=history)
@@ -115,6 +129,7 @@ def route_question(question: str, history: list = []):
             "hadiths": [],
         }
 
+    # ================= FIQH =================
     if mode == "fiqh":
         verses, used_quran_queries = retrieve_quran_by_queries(quran_queries)
 
@@ -124,7 +139,7 @@ def route_question(question: str, history: list = []):
         answer = fiqh_quran_sunnah_answer(
             question=question,
             verses=verses[:5],
-            hadiths=hadiths[:5],
+            hadiths=hadiths[:3],
             history=history,
         )
 
@@ -137,9 +152,10 @@ def route_question(question: str, history: list = []):
             "answer": answer,
             "support": None,
             "verses": verses[:5],
-            "hadiths": hadiths[:5],
+            "hadiths": hadiths[:3],
         }
 
+    # ================= GENERAL =================
     return {
         "mode": "general",
         "search_queries": {
