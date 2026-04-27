@@ -567,32 +567,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Text('سيتم الرد بناءً على القرآن الكريم وصحيح السنة النبوية',
               style: appFont(color: _textMute, fontSize: 15),
               textAlign: TextAlign.center),
-          const SizedBox(height: 32),
-          _buildSuggestionChip('ما فضل الصلاة في أول وقتها؟'),
-          const SizedBox(height: 8),
-          _buildSuggestionChip('ما هي آداب النوم في الإسلام؟'),
-          const SizedBox(height: 8),
-          _buildSuggestionChip('ما فضل الصدقة؟'),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestionChip(String text) {
-    return GestureDetector(
-      onTap: () {
-        _controller.text = text;
-        _sendMessage();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: _card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _border),
-        ),
-        child: Text(text,
-            style: appFont(color: _textMute, fontSize: 13)),
       ),
     );
   }
