@@ -303,6 +303,38 @@ def general_text_answer(question: str):
         "اكتب سؤالك ضمن هذه المجالات، وسأساعدك بإذن الله."
     )
 
+def islamic_general_answer(question: str):
+    if not openai_client:
+        return "لا يوجد جواب متاح حاليًا."
+
+    prompt = f"""
+أنت مساعد إسلامي يشرح المفاهيم الدينية العامة ببساطة.
+
+السؤال:
+{question}
+
+التعليمات:
+أجب فقط إذا كان السؤال دينيًا أو فقهيًا أو متعلقًا بالقرآن أو السنة.
+إذا كان السؤال خارج الدين، قل إن هداي مخصص للأسئلة الدينية.
+اشرح المفهوم بوضوح واختصار.
+لا تخترع آيات أو أحاديث.
+لا تنسب الكلام إلى القرآن أو السنة إلا إذا كان النص موجودًا.
+لا تستخدم markdown.
+
+الإجابة:
+"""
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            temperature=0.2,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return "حدث خطأ أثناء توليد الجواب."
+    
+
 def tafsir_answer(question: str, verses):
     if not verses:
         return "لم يتم العثور على تفسير مناسب."
@@ -367,8 +399,7 @@ def tafsir_answer(question: str, verses):
 
 def fiqh_quran_sunnah_answer(question: str, verses, hadiths):
     if not verses and not hadiths:
-        return general_text_answer(question)
-
+        return islamic_general_answer(question)
     if not openai_client:
         return "تم العثور على نصوص مرتبطة بالسؤال من القرآن والسنة."
 
