@@ -204,6 +204,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				ADD4A75343F9A7AF0D97B739 /* [CP] Embed Pods Frameworks */,
+				CC1122334455667788990011 /* Clear xattrs for codesign */,
 			);
 			buildRules = (
 			);
@@ -367,6 +368,25 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		CC1122334455667788990011 /* Clear xattrs for codesign */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Clear xattrs for codesign";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "find \"$BUILT_PRODUCTS_DIR\" -name '*.framework' -exec xattr -cr {} \\; 2>/dev/null\nNATIVE_ASSETS=\"$PROJECT_DIR/build/native_assets/ios\"\n[ -d \"$NATIVE_ASSETS\" ] && xattr -cr \"$NATIVE_ASSETS\" 2>/dev/null\ntrue\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
