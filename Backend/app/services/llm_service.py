@@ -124,6 +124,16 @@ dua_query يجب أن يشير للحالة الروحية المناسبة.
 - أنشئ hadith_queries متعددة، كل واحدة تخص جزءًا من السؤال.
 - أنشئ quran_queries متعددة بنفس الطريقة.
 
+إذا كان السؤال تعريفي أو أصولي (مثل: الفرق بين الواجب والمستحب):
+
+- لا تعتمد على نص حرفي
+- استخرج مفاهيم قريبة:
+  مثل:
+  hadith_queries: ["الأمر", "النهي", "الطاعة", "فضل العمل"]
+  quran_queries: ["أطيعوا الله", "افعلوا", "لا تفعلوا"]
+
+- الهدف: جلب نصوص عامة تساعد في الشرح
+
 مثال:
 "ما حكم السحر والربا؟"
 
@@ -357,7 +367,7 @@ def tafsir_answer(question: str, verses):
 
 def fiqh_quran_sunnah_answer(question: str, verses, hadiths):
     if not verses and not hadiths:
-        return "لم أجد في النتائج المسترجعة ما يكفي لإعطاء جواب مباشر من القرآن والسنة."
+        return general_text_answer(question)
 
     if not openai_client:
         return "تم العثور على نصوص مرتبطة بالسؤال من القرآن والسنة."
