@@ -386,7 +386,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "find \"$BUILT_PRODUCTS_DIR\" -name '*.framework' -exec xattr -cr {} \\; 2>/dev/null\nNATIVE_ASSETS=\"$PROJECT_DIR/build/native_assets/ios\"\n[ -d \"$NATIVE_ASSETS\" ] && xattr -cr \"$NATIVE_ASSETS\" 2>/dev/null\ntrue\n";
+			shellScript = "find \"$BUILT_PRODUCTS_DIR\" -name '*.framework' -exec xattr -cr {} \\; 2>/dev/null\nNATIVE_ASSETS=\"$PROJECT_DIR/build/native_assets/ios\"\n[ -d \"$NATIVE_ASSETS\" ] && xattr -cr \"$NATIVE_ASSETS\" 2>/dev/null\nFLUTTER_BUILD=\"$PROJECT_DIR/build/ios\"\n[ -d \"$FLUTTER_BUILD\" ] && find \"$FLUTTER_BUILD\" -name '*.framework' -exec xattr -cr {} \\; 2>/dev/null\ntrue\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
