@@ -5,7 +5,7 @@ import '../models/answer_response.dart';
 class ApiService {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8000',
+    defaultValue: 'https://hudai-production.up.railway.app',
   );
 
   static Future<AnswerResponse> ask(String question, {List<Map<String, String>> history = const []}) async {
